@@ -48,8 +48,10 @@ When reading each entry below, the working checklist is:
 | Stage | Bet | Entry |
 |---|---|---|
 | Parse + Serve (LSP) + Lint + Format | Pandoc-extended Markdown as a first-class CST with LSP delivery | [panache](./panache) |
-
-More entries to come. See *Candidates to add* below.
+| Parse — JS AST + plugin ecosystem | Markdown as a typed mdast tree; everything is a plugin over the unified AST | [remark](./remark) |
+| Parse — Rust AST (mdast-compatible) | The same AST design as remark, ported to Rust by the same author | [markdown-rs](./markdown-rs) |
+| Author + Render — JSX-free tag discipline | `{% tag %}` instead of MDX's JSX; schema-validated authoring for docs sites | [markdoc](./markdoc) |
+| Serve (LSP) — wikilink / Zettelkasten focus | Markdown LSP centered on wiki-link cross-references and note-graphs, not Pandoc extensions | [marksman](./marksman) |
 
 ---
 
@@ -79,66 +81,129 @@ More entries to come. See *Candidates to add* below.
   [Posit Community](https://forum.posit.co/t/announcing-panache-a-language-server-formatter-and-linter-for-quarto-pandoc-and-r-markdown/210706).
   The interesting question against future entries: panache's CST design
   is the **lossless-tree bet** — compare it against AST-based parsers
-  (remark, markdown-it) that drop syntactic information at parse time.
+  (remark, markdown-rs) that work on a lossy `mdast` tree.
+
+### [remark](./remark)
+- **Repo:** https://github.com/remarkjs/remark — *markdown processor
+  powered by plugins, part of the @unifiedjs collective*
+- **Maintainer:** Titus Wormer (`wooorm`) and the unified collective
+- **Why this is here:** The dominant JS Markdown processor and the one
+  the entire Lossless toolchain already depends on transitively — Astro's
+  content pipeline, MDX, Markdoc's competitors, and most static-site
+  generators in the JS world build on remark. It is the canonical
+  **AST bet**: parse to `mdast` (a typed JSON tree of node objects),
+  transform via plugins that walk and mutate the tree, then serialize.
+  100% CommonMark, 100% GFM with a plugin, 100% MDX with a plugin —
+  the dialect coverage that makes it the de-facto JS standard. The
+  150+-plugin ecosystem is itself a design exhibit: extension via
+  visitor-style tree walks rather than parser forks. Built on
+  [`micromark`](https://github.com/micromark/micromark) (the
+  specification-tracking tokenizer below remark), which is worth a
+  separate look later. The interesting comparison against panache:
+  remark's `mdast` is lossy by design — it does not promise
+  source-round-trip — while panache's CST does. For our [[lossless-flavored-markdown]]
+  work this is the upstream we extend, not a competitor.
+
+### [markdown-rs](./markdown-rs)
+- **Repo:** https://github.com/wooorm/markdown-rs — *CommonMark compliant
+  markdown parser in Rust with ASTs and extensions*
+- **Maintainer:** Titus Wormer (`wooorm`) — same author as remark and
+  micromark
+- **Why this is here:** The **Rust port of remark's design** by the
+  remark author himself. 100% CommonMark, 100% GFM, 100% MDX, plus
+  frontmatter and math extensions. 100% safe Rust, 100% safe HTML by
+  default, 2300+ tests with 100% coverage and fuzz testing — the
+  industrial-strength claim. Emits the same `mdast` shape as remark, so
+  a tool can in principle share AST consumers across the JS and Rust
+  worlds. The interesting comparisons: against **panache** (also Rust,
+  but CST-based and Pandoc-flavored where markdown-rs is AST-based and
+  CommonMark/GFM/MDX-focused) and against **pulldown-cmark / comrak**
+  (the other major Rust parsers — different lineage, different API
+  surface). For the "if we ever want a Rust-side Lossless parser"
+  question this is the most direct continuation of the remark tradition.
+
+### [markdoc](./markdoc)
+- **Repo:** https://github.com/markdoc/markdoc — *A powerful, flexible,
+  Markdown-based authoring framework*
+- **Maintainer:** Stripe (`markdoc` org) — designed to power
+  [Stripe's public docs](https://stripe.com/docs)
+- **Why this is here:** The most credible **JSX-free alternative to MDX**
+  in the docs-site space. Where MDX says "Markdown + JSX, components
+  imported directly into prose," Markdoc says "Markdown + a constrained
+  `{% tag %}` syntax with schema validation at the boundary." The
+  tradeoff is explicit: Markdoc gives up MDX's component-import
+  flexibility in exchange for (1) authoring that doesn't require
+  authors to know JS/React, (2) schema-validated tags that fail loudly
+  rather than silently rendering wrong, (3) clean separation between
+  content and runtime components. Stripe's docs are the existence proof
+  for the design at scale. For the render-stage comparison this is the
+  third pole of the triangle — MDX (JSX-native), Astro Content (remark
+  + components via slots), and Markdoc (tag-and-schema) — and the
+  question worth asking is which pole [[lossless-flavored-markdown]]
+  is actually closest to.
+
+### [marksman](./marksman)
+- **Repo:** https://github.com/artempyanykh/marksman — *Write Markdown
+  with code assist and intelligence in the comfort of your favourite
+  editor*
+- **Maintainer:** Artem Pyanykh (`artempyanykh`); F#/.NET
+- **Why this is here:** The **prevailing open-source Markdown LSP before
+  panache**, and the natural editor-LSP comparator. Different design
+  bet: where panache centers Pandoc's syntax extensions and code-block
+  formatting, marksman centers **wiki-link / Zettelkasten-style
+  cross-references** — completion, goto-definition, find-references,
+  rename refactoring across `[[note-name]]` links and Markdown internal
+  anchors. Distributed as a self-contained binary for macOS / Linux /
+  Windows; available in Homebrew core. The two LSPs together define
+  the axes of the editor-time design space — *syntax fidelity*
+  (panache) vs. *cross-reference graph* (marksman) — and the question
+  for LFM is whether we want one of these, both running side-by-side,
+  or a third LSP that subsumes them.
 
 ---
 
 ## Candidates to add
 
-These are not yet pinned as submodules. When the study expands, run
+Not yet pinned. When the study expands, run
 `git submodule add <url> <slug>` from the study root.
 
-### Parsers — the canonical AST/CST players
+### Parsers — still to add
 
-- **remark** (unified) — https://github.com/remarkjs/remark — the dominant
-  JS Markdown AST processor; powers Astro's content pipeline, MDX, and
-  much of the Lossless toolchain.
-- **micromark** — https://github.com/micromark/micromark — the lower-level
-  CommonMark tokenizer remark builds on; the actual specification-tracking
-  parser.
-- **markdown-it** — https://github.com/markdown-it/markdown-it — the other
-  major JS Markdown parser; plugin-heavy, used by VuePress, etc.
-- **pulldown-cmark** — https://github.com/pulldown-cmark/pulldown-cmark —
-  Rust streaming CommonMark parser; the parser inside mdBook and many
-  Rust-based tools.
+- **micromark** — https://github.com/micromark/micromark — the
+  lower-level CommonMark tokenizer that `remark` builds on; the actual
+  specification-tracking parser.
+- **markdown-it** — https://github.com/markdown-it/markdown-it — the
+  other major JS Markdown parser; plugin-heavy, used by VuePress and
+  Docusaurus-adjacent stacks.
+- **pulldown-cmark** — https://github.com/pulldown-cmark/pulldown-cmark
+  — Rust streaming CommonMark parser; the parser inside mdBook and
+  many Rust-based tools. Token-stream rather than tree.
 - **comrak** — https://github.com/kivikakk/comrak — Rust GFM-compatible
   parser with a CommonMark-faithful AST.
-- **goldmark** — https://github.com/yuin/goldmark — Go's de-facto Markdown
-  parser; used by Hugo. Extension model worth comparing.
+- **goldmark** — https://github.com/yuin/goldmark — Go's de-facto
+  Markdown parser; used by Hugo. Extension model worth comparing.
 - **Pandoc** — https://github.com/jgm/pandoc — the upstream spec for
   fenced divs, grid tables, definition lists, citations. Haskell. The
-  reference for the dialect panache implements.
+  reference for the dialect [panache](./panache) implements.
 
-### Serve / render — the framework integrations
+### Serve / render — still to add
 
-- **MDX** — https://github.com/mdx-js/mdx — Markdown + JSX; the "Markdown
-  files become components" bet. Adjacent to but distinct from Astro's
-  content collections.
-- **Astro Content Layer** — Astro's first-party Markdown pipeline (remark
-  + rehype underneath). Not a separate repo, but the canonical
-  Lossless-stack render path. https://github.com/withastro/astro
-- **Markdoc** — https://github.com/markdoc/markdoc — Stripe's authoring
-  framework; trades JSX flexibility for tag/attribute discipline.
-- **markdown-rs** — https://github.com/wooorm/markdown-rs — Rust
-  CommonMark + GFM parser by the unified/remark author; the Rust answer
-  to remark's design choices.
+- **MDX** — https://github.com/mdx-js/mdx — Markdown + JSX; the third
+  pole of the render-stage triangle alongside [markdoc](./markdoc) and
+  Astro Content.
+- **Astro Content Layer** — Astro's first-party Markdown pipeline
+  (remark + rehype underneath). https://github.com/withastro/astro
+- **Vale** — https://github.com/errata-ai/vale — prose linter; not a
+  parser but the de-facto style/lint tool worth comparing against
+  panache's linter side.
 
-### Editor / LSP — comparators for panache
+### Wikilink / directive plugins on top of remark
 
-- **marksman** — https://github.com/artempyanykh/marksman — the prevailing
-  open-source Markdown LSP before panache. Different bet: wikilink and
-  cross-reference focused, less Pandoc-aware.
-- **Vale** — https://github.com/errata-ai/vale — prose linter (not a
-  parser, but the de-facto style/lint tool worth comparing against
-  panache's linter side).
-
-### Wikilink / Obsidian-flavor dialects
-
-- **remark-wiki-link** — https://github.com/landakram/remark-wiki-link —
-  wikilink plugin for remark; the [[reference]] syntax that LFM extends.
-- **remark-directive** — https://github.com/remarkjs/remark-directive —
-  the `:::name` directive syntax the directive-flavored dialects build
-  on.
+- **remark-wiki-link** — https://github.com/landakram/remark-wiki-link
+  — wikilink plugin for remark; the `[[reference]]` syntax LFM extends.
+- **remark-directive** — https://github.com/remarkjs/remark-directive
+  — the `:::name` directive syntax the directive-flavored dialects
+  build on.
 
 ---
 

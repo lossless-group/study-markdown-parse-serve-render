@@ -1,3 +1,15 @@
 [submodule "panache"]
 	path = panache
 	url = https://github.com/jolars/panache.git
+[submodule "remark"]
+	path = remark
+	url = https://github.com/remarkjs/remark.git
+[submodule "markdoc"]
+	path = markdoc
+	url = https://github.com/markdoc/markdoc.git
+[submodule "markdown-rs"]
+	path = markdown-rs
+	url = https://github.com/wooorm/markdown-rs.git
+[submodule "marksman"]
+	path = marksman
+	url = https://github.com/artempyanykh/marksman.git
