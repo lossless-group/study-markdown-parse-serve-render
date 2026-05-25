@@ -1,0 +1,3 @@
+[submodule "panache"]
+	path = panache
+	url = https://github.com/jolars/panache.git
