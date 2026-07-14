@@ -13,3 +13,6 @@
 [submodule "marksman"]
 	path = marksman
 	url = https://github.com/artempyanykh/marksman.git
+[submodule "pandoc"]
+	path = pandoc
+	url = https://github.com/jgm/pandoc.git

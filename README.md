@@ -48,6 +48,7 @@ When reading each entry below, the working checklist is:
 | Stage | Bet | Entry |
 |---|---|---|
 | Parse + Serve (LSP) + Lint + Format | Pandoc-extended Markdown as a first-class CST with LSP delivery | [panache](./panache) |
+| Parse + Convert — the upstream dialect spec | The universal markup converter; defines the Pandoc Markdown dialect other tools track (or fail to track) | [pandoc](./pandoc) |
 | Parse — JS AST + plugin ecosystem | Markdown as a typed mdast tree; everything is a plugin over the unified AST | [remark](./remark) |
 | Parse — Rust AST (mdast-compatible) | The same AST design as remark, ported to Rust by the same author | [markdown-rs](./markdown-rs) |
 | Author + Render — JSX-free tag discipline | `{% tag %}` instead of MDX's JSX; schema-validated authoring for docs sites | [markdoc](./markdoc) |
@@ -142,6 +143,28 @@ When reading each entry below, the working checklist is:
   question worth asking is which pole [[lossless-flavored-markdown]]
   is actually closest to.
 
+### [pandoc](./pandoc)
+- **Repo:** https://github.com/jgm/pandoc — *the universal markup
+  converter*
+- **Maintainer:** John MacFarlane (`jgm`)
+- **Why this is here:** The upstream authority every "Pandoc-flavored"
+  claim in this study ultimately points back to. A Haskell library +
+  CLI that converts between dozens of formats (CommonMark, GFM,
+  AsciiDoc, DocBook, DOCX, EPUB, LaTeX, MediaWiki, reStructuredText,
+  Djot, and more) through a single internal representation — parse any
+  input format into it, render out to any output format, no N×M
+  converter matrix. Defines the extended Markdown dialect (fenced divs,
+  grid tables, definition lists, citations, inline footnotes, YAML
+  metadata blocks) that Quarto and R Markdown both build on top of, and
+  that [panache](./panache) explicitly treats as its own "gold
+  standard" — panache vendors a copy of Pandoc's syntax spec
+  (`assets/pandoc-spec.md`) as its parser's definitive reference, and
+  its own contributor docs say outright: "Pandoc parser is the gold
+  standard — if in doubt, see how Pandoc handles it." GPLv2+ licensed.
+  The comparison this pins down: panache is a *lossless-CST, editor-
+  tooling* reimplementation of Pandoc's dialect; Pandoc itself is the
+  *lossy-AST, format-conversion* original the dialect is named after.
+
 ### [marksman](./marksman)
 - **Repo:** https://github.com/artempyanykh/marksman — *Write Markdown
   with code assist and intelligence in the comfort of your favourite
@@ -182,9 +205,6 @@ Not yet pinned. When the study expands, run
   parser with a CommonMark-faithful AST.
 - **goldmark** — https://github.com/yuin/goldmark — Go's de-facto
   Markdown parser; used by Hugo. Extension model worth comparing.
-- **Pandoc** — https://github.com/jgm/pandoc — the upstream spec for
-  fenced divs, grid tables, definition lists, citations. Haskell. The
-  reference for the dialect [panache](./panache) implements.
 
 ### Serve / render — still to add
 
